@@ -1,5 +1,5 @@
 {
-    "name": "MaddLogic/azure-blob-flywheel",
+    "name": "maddLogic/azure-blob-flywheel",
     "description": "A custom Flysystem adapter for Azure Blob Storage, providing seamless file storage integration without relying on the a third-party package for Azure Blob Storage.",
     "type": "library",
     "authors": [
