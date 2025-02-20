@@ -14,4 +14,5 @@ try {
 } catch (Dotenv\Exception\InvalidPathException $e) {
     echo "⚠️  Error: .env.testing file is missing or unreadable!\n";
     exit(1);
+
 }
