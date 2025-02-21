@@ -7,6 +7,7 @@
             "name": "Jason Madden"
         }
     ],
+    "version": "1.0.1",
     "require": {
         "php": "^8.0",
         "guzzlehttp/guzzle": "^7.0",
