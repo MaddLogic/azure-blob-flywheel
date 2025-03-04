@@ -3,11 +3,11 @@
 namespace MaddLogic\FlysystemAzureBlob\Adapter;
 
 use GuzzleHttp\Client;
-use League\Flysystem\AdapterInterface;
 use League\Flysystem\Config;
-use League\Flysystem\Adapter\AbstractAdapter;
+use League\Flysystem\FileAttributes;
+use League\Flysystem\FilesystemAdapter;
 
-class AzureBlobStorageAdapter extends AbstractAdapter
+class AzureBlobStorageAdapter implements FilesystemAdapter
 {
     protected $client;
     protected $accountName;
@@ -31,7 +31,7 @@ class AzureBlobStorageAdapter extends AbstractAdapter
         return $this->client;
     }
 
-    public function write($path, $contents, Config $config)
+    public function write($path, $contents, Config $config): void
     {
         $url = "{$this->endpoint}/{$this->container}/" . ltrim($path, '/');
         $contentLength = strlen($contents);
@@ -46,32 +46,34 @@ class AzureBlobStorageAdapter extends AbstractAdapter
             'headers' => $headers,
             'body'    => $contents
         ]);
-
-        return $response->getStatusCode() === 201;
     }
 
 
 
-    public function read($path)
+    public function read($path): string
     {
         $url = "{$this->endpoint}/{$this->container}/" . ltrim($path, '/');
         $response = $this->client->get($url, [
             'headers' => $this->getHeaders('GET', $path)
         ]);
 
-        return [
-            'contents' => (string) $response->getBody()
-        ];
+        return  $response->getBody();
     }
 
     public function has($path)
     {
         $url = "{$this->endpoint}/{$this->container}/" . ltrim($path, '/');
-        $response = $this->client->head($url, [
-            'headers' => $this->getHeaders('HEAD', $path)
-        ]);
-
-        return $response->getStatusCode() === 200;
+        try {
+            $response = $this->client->head($url, [
+                'headers' => $this->getHeaders('HEAD', $path)
+            ]);
+            return $response->getStatusCode() === 200;
+        } catch (\Exception $e) {
+            if($e->getCode() !== 404) {
+                throw $e;
+            }
+            return false;
+        }
     }
 
     protected function getHeaders($method, $path, $contentLength = 0)
@@ -115,7 +117,7 @@ class AzureBlobStorageAdapter extends AbstractAdapter
 
 
 
-    public function writeStream($path, $resource, Config $config)
+    public function writeStream($path, $resource, Config $config) :void
     {
         // TODO: Implement writeStream() method.
     }
@@ -135,14 +137,19 @@ class AzureBlobStorageAdapter extends AbstractAdapter
         // TODO: Implement rename() method.
     }
 
-    public function copy($path, $newpath)
+    public function copy(string $source, string $destination, Config $config): void
     {
         // TODO: Implement copy() method.
     }
 
-    public function delete($path)
+    public function delete($path): void
     {
-        // TODO: Implement delete() method.
+
+        $url = "{$this->endpoint}/{$this->container}/" . ltrim($path, '/');
+
+        $this->client->delete($url, [
+            'headers' => $this->getHeaders('DELETE', $path)
+        ]);
     }
 
     public function deleteDir($dirname)
@@ -155,7 +162,7 @@ class AzureBlobStorageAdapter extends AbstractAdapter
         // TODO: Implement createDir() method.
     }
 
-    public function setVisibility($path, $visibility)
+    public function setVisibility($path, $visibility) : void
     {
         // TODO: Implement setVisibility() method.
     }
@@ -165,9 +172,10 @@ class AzureBlobStorageAdapter extends AbstractAdapter
         // TODO: Implement readStream() method.
     }
 
-    public function listContents($directory = '', $recursive = false)
+    public function listContents(string $path, bool $deep): iterable
     {
         // TODO: Implement listContents() method.
+        return [];
     }
 
     public function getMetadata($path)
@@ -193,5 +201,51 @@ class AzureBlobStorageAdapter extends AbstractAdapter
     public function getVisibility($path)
     {
         // TODO: Implement getVisibility() method.
+    }
+
+    public function deleteDirectory(string $path): void
+    {
+        // TODO: Implement deleteDirectory() method.
+    }
+
+    public function createDirectory(string $path, Config $config): void
+    {
+        // TODO: Implement createDirectory() method.
+    }
+
+    public function move(string $source, string $destination, Config $config): void
+    {
+        // TODO: Implement move() method.
+    }
+
+
+    public function fileExists(string $path): bool
+    {
+        // TODO: Implement fileExists() method.
+    }
+
+    public function directoryExists(string $path): bool
+    {
+        // TODO: Implement directoryExists() method.
+    }
+
+    public function visibility(string $path): FileAttributes
+    {
+        // TODO: Implement visibility() method.
+    }
+
+    public function mimeType(string $path): FileAttributes
+    {
+        // TODO: Implement mimeType() method.
+    }
+
+    public function lastModified(string $path): FileAttributes
+    {
+        // TODO: Implement lastModified() method.
+    }
+
+    public function fileSize(string $path): FileAttributes
+    {
+        // TODO: Implement fileSize() method.
     }
 }
