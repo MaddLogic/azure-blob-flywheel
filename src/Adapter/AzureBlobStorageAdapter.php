@@ -222,11 +222,23 @@ class AzureBlobStorageAdapter implements FilesystemAdapter
     public function fileExists(string $path): bool
     {
         // TODO: Implement fileExists() method.
+        return $this->has($path);
     }
 
     public function directoryExists(string $path): bool
     {
         // TODO: Implement directoryExists() method.
+        $url = "{$this->endpoint}/{$this->container}?restype=container&comp=list&prefix=" . ltrim($path, '/') . '/';
+        try {
+            $response = $this->client->get($url, [
+                'headers' => $this->getHeaders('GET', $path)
+            ]);
+            $body = $response->getBody()->getContents();
+            $xml = simplexml_load_string($body);
+            return isset($xml->Blobs->Blob);
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 
     public function visibility(string $path): FileAttributes
@@ -236,7 +248,16 @@ class AzureBlobStorageAdapter implements FilesystemAdapter
 
     public function mimeType(string $path): FileAttributes
     {
-        // TODO: Implement mimeType() method.
+        $url = "{$this->endpoint}/{$this->container}/" . ltrim($path, '/');
+        try {
+            $response = $this->client->head($url, [
+                'headers' => $this->getHeaders('HEAD', $path)
+            ]);
+            $mimeType = $response->getHeaderLine('Content-Type');
+            return new FileAttributes($path, null, null, null, $mimeType);
+        } catch (\Exception $e) {
+            throw new \RuntimeException("Unable to retrieve MIME type for path: $path", 0, $e);
+        }
     }
 
     public function lastModified(string $path): FileAttributes
